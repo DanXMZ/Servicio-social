@@ -1,0 +1,111 @@
+        - # obtained from http://rosettacode.org/wiki/15_Puzzle_Game#Julia
+        - # modifications:
+        - # size variable name was replaced with sz throughout the file
+        - # `exit(0)` was replaced with `println("Exiting the game..."); return`
+        - 
+        - using Random
+        -  
+        - const sz = 4
+        - const puzzle = string.(reshape(1:16, sz, sz))
+        - puzzle[16] = " "
+        - rng = MersenneTwister(Int64(round(time())))
+        0 shufflepuzzle() = (puzzle .= shuffle(rng, puzzle))
+        - findtile(t) = findfirst(x->x == t, puzzle)
+        - findhole() = findtile(" ")
+        -  
+        - function issolvable()
+        -     inversioncount = 1
+        -     asint(x) = (puzzle[x] == " ") ? 0 : parse(Int64, puzzle[x])
+        0     for i in 1:sz^2-1, j in i:sz^2
+        0         if puzzle[i] == " " || puzzle[j] == " "
+        -             continue
+        -         end
+        0         if parse(Int, puzzle[i]) < parse(Int, puzzle[j])
+        0             inversioncount += 1
+        -         end
+        -     end
+        0     if sz % 2 == 1
+        -         return inversioncount % 2 == 0
+        -     end
+        0     pos = findhole()
+        0     inversioncount += pos[2]
+        0     return inversioncount & 1 == 0
+        - end
+        -  
+        - function nexttohole()
+        0     holepos = findhole()
+        0     row = holepos[1]
+        0     col = holepos[2]
+        0     if row == 1
+        0         if col == 1
+        0             return [[row, col + 1], [row + 1, col]]
+        0         elseif col == sz
+        0             return [[row, col - 1], [row + 1, col]]
+        -         else
+        0             return [[row, col - 1], [row, col + 1], [row + 1, col]]
+        -         end
+        0     elseif row == sz
+        0         if col == 1
+        0             return [[row - 1, col], [row, col + 1]]
+        0         elseif col == sz
+        0             return [[row - 1, col], [row, col - 1]]
+        -         else
+        0             return [[row - 1, col], [row, col - 1], [row, col + 1]]
+        -         end
+        -     else
+        0         if col == 1
+        0             return [[row - 1, col], [row, col + 1], [row + 1, col]]
+        0         elseif col == sz
+      320             return [[row - 1, col], [row, col - 1], [row + 1, col]]
+        -         else
+        0             return [[row - 1, col], [row, col - 1], [row, col + 1], [row + 1, col]]
+        -         end
+        -     end
+        - end
+        -  
+        - possiblemoves() = map(pos->puzzle[pos[1], pos[2]], nexttohole())
+        -  
+        - function movehole(tiletofill)
+        0     if tiletofill in possiblemoves()
+        0         curpos = findtile(tiletofill)
+        0         holepos = findhole()
+        0         puzzle[holepos] = tiletofill
+        0         puzzle[curpos] = " "
+        -     else
+        0         println("Bad tile move $tiletofill.\nPossible moves are $(possiblemoves()).")
+        -     end
+        - end
+        -  
+        - function printboard()
+        -     ppuz(x,y) = print(lpad(rpad(puzzle[x,y], 3), 4), "|")
+       48     print("+----+----+----+----+\n|")
+        0     for j in 1:sz, i in 1:sz
+     3888         ppuz(i,j)
+        0         if i == sz
+      192             print("\n")
+        0             if j < sz
+      448                  print("|")
+        -             end
+        -         end
+        -     end
+      144     println("+----+----+----+----+")
+        -  
+        - end
+        -  
+        - function puzzle15play()
+     1792     solved() = (puzzle[1:15] == string.(1:15))
+        0     shufflepuzzle()
+       32     println("This puzzle is", issolvable() ? " " : " not ", "solvable.")
+        0     while !solved()
+        0         printboard()
+      528         print("Possible moves are: $(possiblemoves()), 0 to exit. Your move? =>  ")
+        0         s = readline()
+        0         if s == "0"
+      144         	println("Exiting the game...")
+        0             return
+        -         end
+        0         movehole(s)
+        -     end
+        0     printboard()
+        0     println("Puzzle solved.")
+        - end
